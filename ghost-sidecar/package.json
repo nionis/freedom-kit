@@ -10,7 +10,7 @@
   },
   "pkg": {
     "assets": [
-      "local/**/*"
+      "local2/**/*"
     ],
     "outputPath": "../src-tauri/binaries"
   },
