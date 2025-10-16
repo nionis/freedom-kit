@@ -1,0 +1,37 @@
+{
+  "name": "railgun-sidecar",
+  "version": "0.0.1",
+  "bin": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "tsc",
+    "build": "pkg . --targets node22-macos-arm64 --output ../src-tauri/binaries/railgun-sidecar-aarch64-apple-darwin",
+    "build:all": "pkg . --targets node22-macos-arm64,node22-linux-x64,node22-win-x64"
+  },
+  "pkg": {
+    "outputPath": "../src-tauri/binaries",
+    "scripts": [
+      "node_modules/axios/dist/node/*"
+    ],
+    "assets": [
+      "node_modules/leveldown/prebuilds/*"
+    ]
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/leveldown": "^4.0.6",
+    "@types/node": "^22.8.5",
+    "@yao-pkg/pkg": "^6.9.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "@railgun-community/shared-models": "7.6.1",
+    "@railgun-community/wallet": "10.4.0",
+    "cors": "^2.8.5",
+    "ethers": "^6.15.0",
+    "express": "^5.1.0",
+    "leveldown": "^6.1.1"
+  }
+}

@@ -1,10 +1,11 @@
-const { spawn } = require("node:child_process");
-const { join } = require("node:path");
-const fs = require("node:fs");
-const { homedir } = require("node:os");
+import { spawn } from "node:child_process";
+import { join } from "node:path";
+import fs from "node:fs";
+import { homedir } from "node:os";
 
 // Determine if we're running from a pkg bundle
-const isPkg = typeof process.pkg !== "undefined";
+const isPkg = typeof process["pkg"] !== "undefined";
+console.log("Running in pkg mode:", isPkg);
 
 // Function to recursively copy directory
 function copyDirSync(src, dest) {
