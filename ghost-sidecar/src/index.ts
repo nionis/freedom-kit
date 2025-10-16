@@ -151,59 +151,65 @@ function copyDirSync(src: string, dest: string) {
   }
 }
 
+const GHOST_FOLDER_NAME = "original";
+
 // Get the appropriate Ghost data path
 function getGhostPath() {
-  if (isPkg) {
-    // When packaged, extract to user data directory
-    const appDataDir = join(homedir(), ".ghost-freedom-kit");
-    const ghostPath = join(appDataDir, "local2");
+  // running in development
+  if (!isPkg) {
+    return join(__dirname, "..", GHOST_FOLDER_NAME);
+  }
 
-    // Check if we need to extract the local folder
-    if (!fs.existsSync(ghostPath)) {
-      console.log("First run detected. Extracting Ghost data...");
+  // When packaged, extract to user data directory
+  const appDataDir = join(homedir(), ".ghost-freedom-kit");
+  const ghostPath = join(appDataDir, GHOST_FOLDER_NAME);
 
-      // The bundled assets are in the snapshot filesystem
-      const bundledPath = join(__dirname, "..", "local2");
+  // if the folder already exists, return it
+  if (fs.existsSync(ghostPath)) {
+    return ghostPath;
+  }
 
-      try {
-        console.log(`Copying from ${bundledPath} to ${ghostPath}...`);
-        copyDirSync(bundledPath, ghostPath);
-        console.log("Ghost data extracted successfully!");
+  // Check if we need to extract the local folder
 
-        // Update paths in config.development.json
-        const configPath = join(ghostPath, "config.development.json");
-        if (fs.existsSync(configPath)) {
-          console.log("Updating config paths...");
-          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  console.log("First run detected. Extracting Ghost data...");
 
-          // Update database path
-          if (config.database?.connection?.filename) {
-            config.database.connection.filename = join(
-              ghostPath,
-              "content",
-              "data",
-              "ghost-local.db"
-            );
-          }
+  // The bundled assets are in the snapshot filesystem
+  const bundledPath = join(__dirname, "..", GHOST_FOLDER_NAME);
 
-          // Update content path
-          if (config.paths?.contentPath) {
-            config.paths.contentPath = join(ghostPath, "content");
-          }
+  try {
+    console.log(`Copying from ${bundledPath} to ${ghostPath}...`);
+    copyDirSync(bundledPath, ghostPath);
+    console.log("Ghost data extracted successfully!");
 
-          fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-          console.log("Config paths updated successfully!");
-        }
-      } catch (error) {
-        console.error("Failed to extract Ghost data:", error);
-        process.exit(1);
+    // Update paths in config.development.json
+    const configPath = join(ghostPath, "config.production.json");
+    if (fs.existsSync(configPath)) {
+      console.log("Updating config paths...");
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+      // Update database path
+      if (config.database?.connection?.filename) {
+        config.database.connection.filename = join(
+          ghostPath,
+          "content",
+          "data",
+          "ghost-local.db"
+        );
       }
+
+      // Update content path
+      if (config.paths?.contentPath) {
+        config.paths.contentPath = join(ghostPath, "content");
+      }
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      console.log("Config paths updated successfully!");
     }
 
     return ghostPath;
-  } else {
-    // When running in development, use the local folder directly
-    return join(__dirname, "..", "local2");
+  } catch (error) {
+    console.error("Failed to extract Ghost data:", error);
+    process.exit(1);
   }
 }
 
