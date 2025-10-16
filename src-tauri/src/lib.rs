@@ -31,9 +31,9 @@ async fn is_tor_running(state: tauri::State<'_, AppState>) -> Result<bool, Strin
     Ok(hs.as_ref().map(|s| s.is_running()).unwrap_or(false))
 }
 
-/// Inject the onion URL banner into the current page
+/// Inject the combined TOR + Railgun banner into the current page
 async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
-    println!("🔄 Injecting onion banner into Ghost page...");
+    println!("🔄 Injecting combined banner into Ghost page...");
 
     // Get the onion address
     let state = app_handle.state::<AppState>();
@@ -42,7 +42,94 @@ async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
         hs.as_ref().and_then(|s| s.onion_url())
     };
 
-    let banner_js = if let Some(address) = onion_address {
+    // Mock Railgun data - pretending the user already has a loaded wallet
+    let railgun_address =
+        Some("0zk1qyk9nn5zvjwprfv2qe6cdmzk4wwvvz7w3qjk8xrandom3example8address4mock".to_string());
+    let railgun_balance = "0".to_string();
+
+    // NOTE: Railgun sidecar is disabled - using mock data above
+    // let client = reqwest::Client::new();
+    // let railgun_address = match client.get("http://localhost:8080/wallet/address").send().await { ... };
+    // let railgun_balance = match client.get("http://localhost:8080/wallet/balance").send().await { ... };
+
+    let banner_js = if onion_address.is_some() || railgun_address.is_some() {
+        let tor_section = if let Some(addr) = &onion_address {
+            format!(
+                r#"
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                <div style="font-size: 20px;">🧅</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">
+                        TOR Hidden Service
+                    </div>
+                    <div style="font-family: monospace; font-size: 11px; opacity: 0.95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {}
+                    </div>
+                </div>
+                <button id='copy-onion-btn' style="
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    padding: 6px 14px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                ">📋 Copy</button>
+            </div>
+            "#,
+                addr
+            )
+        } else {
+            String::new()
+        };
+
+        let railgun_section = if let Some(addr) = &railgun_address {
+            format!(
+                r#"
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                <div style="font-size: 20px;">🔒</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">
+                        Railgun Wallet
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="font-family: monospace; font-size: 11px; opacity: 0.95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">
+                            {}
+                        </div>
+                        <div class="railgun-balance" style="font-weight: 600; font-size: 12px; white-space: nowrap;">
+                            {} WETH
+                        </div>
+                    </div>
+                </div>
+                <button id='copy-railgun-btn' style="
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    padding: 6px 14px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                ">📋 Copy</button>
+            </div>
+            "#,
+                addr, railgun_balance
+            )
+        } else {
+            String::new()
+        };
+
+        let divider = if !tor_section.is_empty() && !railgun_section.is_empty() {
+            r#"<div style="width: 1px; height: 40px; background: rgba(255, 255, 255, 0.3); margin: 0 8px;"></div>"#
+        } else {
+            ""
+        };
+
         format!(
             r#"
 (function() {{
@@ -71,45 +158,23 @@ async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
     `;
     
     banner.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-            <div style="font-size: 20px;">🧅</div>
-            <div style="flex: 1;">
-                <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">
-                    TOR Hidden Service Active
-                </div>
-                <div style="font-family: monospace; font-size: 11px; opacity: 0.95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    {address}
-                </div>
-            </div>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <button id='copy-onion-btn' style="
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                padding: 6px 14px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 500;
-                transition: all 0.2s;
-                white-space: nowrap;
-            ">📋 Copy</button>
-            <button id='close-onion-banner' style="
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                cursor: pointer;
-                font-size: 18px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: background 0.2s;
-            ">×</button>
-        </div>
+        {}
+        {}
+        {}
+        <button id='close-onion-banner' style="
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        ">×</button>
     `;
     
     document.body.appendChild(banner);
@@ -121,25 +186,68 @@ async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
     adjustBodyPadding();
     window.addEventListener('resize', adjustBodyPadding);
     
-    // Copy button handler
-    document.getElementById('copy-onion-btn').addEventListener('click', async () => {{
-        const btn = document.getElementById('copy-onion-btn');
-        try {{
-            await navigator.clipboard.writeText('{address}');
-            btn.textContent = '✅ Copied!';
-            btn.style.background = 'rgba(76, 175, 80, 0.5)';
-            setTimeout(() => {{
-                btn.textContent = '📋 Copy';
-                btn.style.background = 'rgba(255, 255, 255, 0.2)';
-            }}, 2000);
-        }} catch (error) {{
-            console.error('Failed to copy:', error);
-            btn.textContent = '❌ Failed';
-            setTimeout(() => {{
-                btn.textContent = '📋 Copy';
-            }}, 2000);
-        }}
-    }});
+    // Copy button handlers
+    const onionBtn = document.getElementById('copy-onion-btn');
+    if (onionBtn) {{
+        onionBtn.addEventListener('click', async () => {{
+            try {{
+                await navigator.clipboard.writeText('{}');
+                onionBtn.textContent = '✅ Copied!';
+                onionBtn.style.background = 'rgba(76, 175, 80, 0.5)';
+                setTimeout(() => {{
+                    onionBtn.textContent = '📋 Copy';
+                    onionBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}, 2000);
+            }} catch (error) {{
+                console.error('Failed to copy:', error);
+                onionBtn.textContent = '❌ Failed';
+                setTimeout(() => {{
+                    onionBtn.textContent = '📋 Copy';
+                }}, 2000);
+            }}
+        }});
+        onionBtn.addEventListener('mouseenter', () => {{
+            if (!onionBtn.textContent.includes('Copied')) {{
+                onionBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+        }});
+        onionBtn.addEventListener('mouseleave', () => {{
+            if (!onionBtn.textContent.includes('Copied')) {{
+                onionBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+        }});
+    }}
+    
+    const railgunBtn = document.getElementById('copy-railgun-btn');
+    if (railgunBtn) {{
+        railgunBtn.addEventListener('click', async () => {{
+            try {{
+                await navigator.clipboard.writeText('{}');
+                railgunBtn.textContent = '✅ Copied!';
+                railgunBtn.style.background = 'rgba(76, 175, 80, 0.5)';
+                setTimeout(() => {{
+                    railgunBtn.textContent = '📋 Copy';
+                    railgunBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}, 2000);
+            }} catch (error) {{
+                console.error('Failed to copy:', error);
+                railgunBtn.textContent = '❌ Failed';
+                setTimeout(() => {{
+                    railgunBtn.textContent = '📋 Copy';
+                }}, 2000);
+            }}
+        }});
+        railgunBtn.addEventListener('mouseenter', () => {{
+            if (!railgunBtn.textContent.includes('Copied')) {{
+                railgunBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+        }});
+        railgunBtn.addEventListener('mouseleave', () => {{
+            if (!railgunBtn.textContent.includes('Copied')) {{
+                railgunBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+        }});
+    }}
     
     // Close button handler
     document.getElementById('close-onion-banner').addEventListener('click', () => {{
@@ -150,21 +258,12 @@ async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
     }});
     
     // Hover effects
-    document.getElementById('copy-onion-btn').addEventListener('mouseenter', (e) => {{
-        if (!e.target.textContent.includes('Copied')) {{
-            e.target.style.background = 'rgba(255, 255, 255, 0.3)';
-        }}
+    const closeBtn = document.getElementById('close-onion-banner');
+    closeBtn.addEventListener('mouseenter', () => {{
+        closeBtn.style.background = 'rgba(255, 255, 255, 0.3)';
     }});
-    document.getElementById('copy-onion-btn').addEventListener('mouseleave', (e) => {{
-        if (!e.target.textContent.includes('Copied')) {{
-            e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-        }}
-    }});
-    document.getElementById('close-onion-banner').addEventListener('mouseenter', (e) => {{
-        e.target.style.background = 'rgba(255, 255, 255, 0.3)';
-    }});
-    document.getElementById('close-onion-banner').addEventListener('mouseleave', (e) => {{
-        e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+    closeBtn.addEventListener('mouseleave', () => {{
+        closeBtn.style.background = 'rgba(255, 255, 255, 0.2)';
     }});
     
     // Animate in
@@ -172,9 +271,32 @@ async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
     setTimeout(() => {{
         banner.style.transform = 'translateY(0)';
     }}, 10);
+    
+    // NOTE: Balance refresh disabled since we're using mock Railgun data
+    // const hasRailgun = banner.querySelector('.railgun-balance');
+    // if (hasRailgun) {{
+    //     setInterval(async () => {{
+    //         try {{
+    //             const response = await fetch('http://localhost:8080/wallet/balance');
+    //             if (response.ok) {{
+    //                 const data = await response.json();
+    //                 const balanceEl = banner.querySelector('.railgun-balance');
+    //                 if (balanceEl) {{
+    //                     balanceEl.textContent = data.balance + ' WETH';
+    //                 }}
+    //             }}
+    //         }} catch (error) {{
+    //             console.error('Failed to refresh balance:', error);
+    //         }}
+    //     }}, 30000);
+    // }}
 }})();
 "#,
-            address = address
+            tor_section,
+            divider,
+            railgun_section,
+            onion_address.as_ref().unwrap_or(&"".to_string()),
+            railgun_address.as_ref().unwrap_or(&"".to_string())
         )
     } else {
         // If onion address is not ready yet, show a loading banner
@@ -323,7 +445,16 @@ pub fn run() {
             hidden_service: Arc::new(Mutex::new(None)),
             ghost_child: Arc::new(Mutex::new(None)),
         })
-        .invoke_handler(tauri::generate_handler![get_onion_address, is_tor_running])
+        .invoke_handler(tauri::generate_handler![
+            get_onion_address,
+            is_tor_running,
+            // NOTE: Railgun commands disabled - using mock data instead
+            // check_railgun_wallet_exists,
+            // create_railgun_wallet,
+            // unlock_railgun_wallet,
+            // get_railgun_address,
+            // get_railgun_balance
+        ])
         .setup(|app| {
             // Get the path to the ghost-sidecar binary
             let sidecar_command = app.shell().sidecar("ghost-sidecar").unwrap();
@@ -360,6 +491,40 @@ pub fn run() {
                 }
             });
 
+            // NOTE: Railgun sidecar disabled - using mock data in banner
+            // Spawn the railgun-sidecar binary
+            // let railgun_sidecar_command = app.shell().sidecar("railgun-sidecar").unwrap();
+            // let (mut railgun_rx, railgun_child) = railgun_sidecar_command
+            //     .spawn()
+            //     .expect("Failed to spawn Railgun sidecar");
+
+            // Store the Railgun child process in app state
+            // let state = app.state::<AppState>();
+            // tauri::async_runtime::block_on(async {
+            //     *state.railgun_child.lock().await = Some(railgun_child);
+            // });
+
+            // Create a thread to handle output from the railgun sidecar
+            // tauri::async_runtime::spawn(async move {
+            //     while let Some(event) = railgun_rx.recv().await {
+            //         match event {
+            //             tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+            //                 println!("[Railgun stdout]: {}", String::from_utf8_lossy(&line));
+            //             }
+            //             tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
+            //                 eprintln!("[Railgun stderr]: {}", String::from_utf8_lossy(&line));
+            //             }
+            //             tauri_plugin_shell::process::CommandEvent::Error(err) => {
+            //                 eprintln!("[Railgun error]: {}", err);
+            //             }
+            //             tauri_plugin_shell::process::CommandEvent::Terminated(status) => {
+            //                 println!("[Railgun terminated]: {:?}", status);
+            //             }
+            //             _ => {}
+            //         }
+            //     }
+            // });
+
             // Wait for Ghost to be ready and then navigate
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -381,14 +546,22 @@ pub fn run() {
                                 Ok(_) => {
                                     println!("✅ Window navigated to Ghost");
 
-                                    // Clone app_handle for the async task
+                                    // Clone app_handle for the async tasks
                                     let app_for_banner = app_handle.clone();
+                                    // let app_for_wallet = app_handle.clone(); // Not needed - wallet popup disabled
 
                                     // Wait a moment for the page to load, then inject the banner
                                     tauri::async_runtime::spawn(async move {
                                         tokio::time::sleep(Duration::from_secs(2)).await;
                                         inject_onion_banner(&app_for_banner).await;
                                     });
+
+                                    // NOTE: Skipping Railgun wallet setup popup - pretending user already has loaded wallet
+                                    // Show Railgun wallet setup popup after a brief delay
+                                    // tauri::async_runtime::spawn(async move {
+                                    //     tokio::time::sleep(Duration::from_secs(3)).await;
+                                    //     inject_railgun_wallet_popup(&app_for_wallet).await;
+                                    // });
                                 }
                                 Err(e) => eprintln!("❌ Failed to navigate window: {}", e),
                             }
@@ -526,7 +699,7 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {
-                println!("🛑 Window destroyed, cleaning up Ghost process...");
+                println!("🛑 Window destroyed, cleaning up processes...");
                 let state = window.state::<AppState>();
                 tauri::async_runtime::block_on(async {
                     if let Some(child) = state.ghost_child.lock().await.take() {
@@ -536,6 +709,14 @@ pub fn run() {
                             Err(e) => eprintln!("❌ Failed to kill Ghost process: {}", e),
                         }
                     }
+                    // NOTE: Railgun cleanup disabled - sidecar not spawned
+                    // if let Some(child) = state.railgun_child.lock().await.take() {
+                    //     println!("🔴 Killing Railgun sidecar process...");
+                    //     match child.kill() {
+                    //         Ok(_) => println!("✅ Railgun process killed successfully"),
+                    //         Err(e) => eprintln!("❌ Failed to kill Railgun process: {}", e),
+                    //     }
+                    // }
                 });
             }
         })

@@ -1,6 +1,9 @@
 import { join } from "node:path";
 import { homedir } from "node:os";
 import fs from "node:fs";
+import { start, stop } from "./engine";
+import { startApiServer } from "./api";
+import { logger } from "./utils";
 
 const appDataDir = join(homedir(), ".railgun-freedom-kit");
 
@@ -9,20 +12,34 @@ if (!fs.existsSync(appDataDir)) {
   fs.mkdirSync(appDataDir, { recursive: true });
 }
 
-console.log("starting Railgun from:", appDataDir);
+logger.info("Starting Railgun from:", appDataDir);
 
-// Instead of spawning, just import and run hey.js
-import { start, stop } from "./engine";
-start(appDataDir);
+// Start the engine and API server
+async function main() {
+  try {
+    // Start Railgun engine
+    await start(appDataDir);
+
+    // Start HTTP API server
+    await startApiServer();
+
+    logger.info("Railgun sidecar is ready");
+  } catch (error) {
+    logger.error("Failed to start Railgun sidecar:", error);
+    process.exit(1);
+  }
+}
+
+main();
 
 // listen for SIGINT and SIGTERM
 process.on("SIGINT", () => {
-  console.log("Received SIGINT, shutting down Railgun...");
+  logger.info("Received SIGINT, shutting down Railgun...");
   stop();
   setTimeout(() => process.exit(0), 1e3);
 });
 process.on("SIGTERM", () => {
-  console.log("Received SIGTERM, shutting down Railgun...");
+  logger.info("Received SIGTERM, shutting down Railgun...");
   stop();
   setTimeout(() => process.exit(0), 1e3);
 });

@@ -6,22 +6,21 @@
   "scripts": {
     "prebuild": "tsc",
     "build": "pkg . --targets node22-macos-arm64 --output ../src-tauri/binaries/railgun-sidecar-aarch64-apple-darwin",
-    "build:all": "pkg . --targets node22-macos-arm64,node22-linux-x64,node22-win-x64"
+    "build:all": "pkg . --targets node22-macos-arm64,node22-linux-x64,node22-win-x64",
+    "postbuild": "cp -r node_modules/leveldown/prebuilds ../src-tauri/binaries/prebuilds"
   },
   "pkg": {
     "outputPath": "../src-tauri/binaries",
     "scripts": [
-      "node_modules/axios/dist/node/*",
-      "node_modules/classic-level/prebuilds/**/*"
+      "node_modules/axios/dist/node/*"
     ],
-    "assets": [
-      "node_modules/classic-level/prebuilds/**/*"
-    ]
+    "assets": []
   },
   "devDependencies": {
     "@types/abstract-leveldown": "^7.2.5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/leveldown": "^4.0.6",
     "@types/node": "^22.8.5",
     "@yao-pkg/pkg": "^6.9.0",
     "abstract-leveldown": "^7.2.0",
@@ -32,6 +31,7 @@
     "@railgun-community/shared-models": "7.6.1",
     "@railgun-community/wallet": "10.4.0",
     "classic-level": "^3.0.0",
+    "leveldown": "^6.1.1",
     "cors": "^2.8.5",
     "ethers": "^6.15.0",
     "express": "^5.1.0"

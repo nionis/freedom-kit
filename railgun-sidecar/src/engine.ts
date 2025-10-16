@@ -8,11 +8,14 @@ import { createArtifactStore } from "./artifact-store";
 import { createNodeDatabase } from "./db";
 import { loadEngineProvider } from "./provider";
 import { loadWallet, generateRandomWallet } from "./wallet";
+import { setupBalanceCallbacks, runBalancePoller } from "./balances";
+import { logger } from "./utils";
 
 let engineInitialized = false;
+let walletInitialized = false;
 
 export async function start(dataDir: string): Promise<void> {
-  console.log("starting railgun engine");
+  logger.info("Starting Railgun engine");
 
   // create directories
   const walletsDir = join(dataDir, "wallets");
@@ -22,14 +25,11 @@ export async function start(dataDir: string): Promise<void> {
 
   const dbPath = join(walletsDir, "engine.db");
   const db = createNodeDatabase(dataDir);
-  console.log(`storing data at: ${dbPath}`);
+  logger.info(`Storing data at: ${dbPath}`);
 
   const artifactStore = createArtifactStore(artifactsDir);
 
-  // check if wallet exists in DB name: "default"
-  // create wallet if it doesn't exist and store it in DB encrypted
-  // store wallet ID in DB so we can load it later
-
+  // Initialize Railgun engine (but don't create wallet yet)
   await startRailgunEngine(
     "default",
     db,
@@ -42,12 +42,34 @@ export async function start(dataDir: string): Promise<void> {
     true
   );
 
-  console.log("railgun engine started");
+  logger.info("Railgun engine started");
 
   const { feesSerialized } = await loadEngineProvider();
-  console.log("loaded provider, feesSerialized:", feesSerialized);
+  logger.info("Loaded provider, feesSerialized:", feesSerialized);
+
+  // Setup balance callbacks
+  setupBalanceCallbacks();
 
   engineInitialized = true;
+}
+
+export async function initializeWallet(railgunId: string): Promise<void> {
+  if (!engineInitialized) {
+    throw new Error("Engine not initialized");
+  }
+
+  if (walletInitialized) {
+    logger.warn("Wallet already initialized, skipping");
+    return;
+  }
+
+  logger.info("Initializing wallet and starting balance polling...");
+
+  // Start balance polling for this wallet
+  runBalancePoller([railgunId]);
+
+  walletInitialized = true;
+  logger.info("Wallet initialized successfully");
 }
 
 export async function stop(): Promise<void> {
@@ -56,4 +78,8 @@ export async function stop(): Promise<void> {
 
 export function isEngineInitialized(): boolean {
   return engineInitialized;
+}
+
+export function isWalletInitialized(): boolean {
+  return walletInitialized;
 }
