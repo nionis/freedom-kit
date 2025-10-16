@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Ghost - Freedom Kit",
+        "title": "Freedom Kit",
         "width": 1200,
         "height": 800
       }
@@ -33,7 +33,8 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      "binaries/ghost-sidecar"
+      "binaries/ghost-sidecar",
+      "binaries/railgun-sidecar"
     ]
   }
 }

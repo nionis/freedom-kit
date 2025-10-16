@@ -181,7 +181,7 @@ pub fn run() {
                         // Now navigate to Ghost
                         if let Some(window) = app_handle.get_webview_window("main") {
                             match window
-                                .navigate(tauri::Url::parse("http://localhost:2368").unwrap())
+                                .navigate(tauri::Url::parse("http://localhost:2368/ghost").unwrap())
                             {
                                 Ok(_) => {
                                     println!("✅ Window navigated to Ghost");

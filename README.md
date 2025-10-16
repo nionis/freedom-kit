@@ -6,7 +6,7 @@
 - [ ] more binaries
 - [ ] test release build
 - [ ] show onion url to host
-- [ ] improve startup speed by compressing ghost
+- [ ] show railgun id
 
 # Tauri + Vanilla TS
 

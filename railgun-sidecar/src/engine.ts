@@ -7,6 +7,7 @@ import {
 import { createArtifactStore } from "./artifact-store";
 import { createNodeDatabase } from "./db";
 import { loadEngineProvider } from "./provider";
+import { loadWallet, generateRandomWallet } from "./wallet";
 
 let engineInitialized = false;
 
@@ -24,6 +25,10 @@ export async function start(dataDir: string): Promise<void> {
   console.log(`storing data at: ${dbPath}`);
 
   const artifactStore = createArtifactStore(artifactsDir);
+
+  // check if wallet exists in DB name: "default"
+  // create wallet if it doesn't exist and store it in DB encrypted
+  // store wallet ID in DB so we can load it later
 
   await startRailgunEngine(
     "default",

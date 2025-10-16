@@ -9,16 +9,6 @@
     "core:default",
     "opener:default",
     "core:window:allow-close",
-    "core:webview:allow-set-webview-focus",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "args": true,
-          "name": "binaries/ghost-sidecar",
-          "sidecar": true
-        }
-      ]
-    }
+    "core:webview:allow-set-webview-focus"
   ]
 }
