@@ -1,6 +1,6 @@
 # freedom-kit
 
-A single, multi-platform, _fool-proof_ application for activisits, publishers, to use.
+A single, multi-platform, _fool-proof_ application for activists, publishers, to use.
 
 Freedom-kit gives you one-click access to your own anonymous blog, hidden publishing, and a private wallet.
 
