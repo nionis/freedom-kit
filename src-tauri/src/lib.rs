@@ -31,6 +31,201 @@ async fn is_tor_running(state: tauri::State<'_, AppState>) -> Result<bool, Strin
     Ok(hs.as_ref().map(|s| s.is_running()).unwrap_or(false))
 }
 
+/// Inject the onion URL banner into the current page
+async fn inject_onion_banner(app_handle: &tauri::AppHandle) {
+    println!("🔄 Injecting onion banner into Ghost page...");
+
+    // Get the onion address
+    let state = app_handle.state::<AppState>();
+    let onion_address = {
+        let hs = state.hidden_service.lock().await;
+        hs.as_ref().and_then(|s| s.onion_url())
+    };
+
+    let banner_js = if let Some(address) = onion_address {
+        format!(
+            r#"
+(function() {{
+    // Remove any existing banner first
+    const existing = document.getElementById('freedom-kit-onion-banner');
+    if (existing) existing.remove();
+    
+    // Create the banner
+    const banner = document.createElement('div');
+    banner.id = 'freedom-kit-onion-banner';
+    banner.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    `;
+    
+    banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+            <div style="font-size: 20px;">🧅</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 13px; margin-bottom: 2px;">
+                    TOR Hidden Service Active
+                </div>
+                <div style="font-family: monospace; font-size: 11px; opacity: 0.95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {address}
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id='copy-onion-btn' style="
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                padding: 6px 14px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 500;
+                transition: all 0.2s;
+                white-space: nowrap;
+            ">📋 Copy</button>
+            <button id='close-onion-banner' style="
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            ">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(banner);
+    
+    // Adjust body padding to account for banner
+    const adjustBodyPadding = () => {{
+        document.body.style.paddingTop = banner.offsetHeight + 'px';
+    }};
+    adjustBodyPadding();
+    window.addEventListener('resize', adjustBodyPadding);
+    
+    // Copy button handler
+    document.getElementById('copy-onion-btn').addEventListener('click', async () => {{
+        const btn = document.getElementById('copy-onion-btn');
+        try {{
+            await navigator.clipboard.writeText('{address}');
+            btn.textContent = '✅ Copied!';
+            btn.style.background = 'rgba(76, 175, 80, 0.5)';
+            setTimeout(() => {{
+                btn.textContent = '📋 Copy';
+                btn.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}, 2000);
+        }} catch (error) {{
+            console.error('Failed to copy:', error);
+            btn.textContent = '❌ Failed';
+            setTimeout(() => {{
+                btn.textContent = '📋 Copy';
+            }}, 2000);
+        }}
+    }});
+    
+    // Close button handler
+    document.getElementById('close-onion-banner').addEventListener('click', () => {{
+        banner.style.transform = 'translateY(-100%)';
+        banner.style.opacity = '0';
+        document.body.style.paddingTop = '0';
+        setTimeout(() => banner.remove(), 300);
+    }});
+    
+    // Hover effects
+    document.getElementById('copy-onion-btn').addEventListener('mouseenter', (e) => {{
+        if (!e.target.textContent.includes('Copied')) {{
+            e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+        }}
+    }});
+    document.getElementById('copy-onion-btn').addEventListener('mouseleave', (e) => {{
+        if (!e.target.textContent.includes('Copied')) {{
+            e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+        }}
+    }});
+    document.getElementById('close-onion-banner').addEventListener('mouseenter', (e) => {{
+        e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+    }});
+    document.getElementById('close-onion-banner').addEventListener('mouseleave', (e) => {{
+        e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+    }});
+    
+    // Animate in
+    banner.style.transition = 'all 0.3s ease';
+    setTimeout(() => {{
+        banner.style.transform = 'translateY(0)';
+    }}, 10);
+}})();
+"#,
+            address = address
+        )
+    } else {
+        // If onion address is not ready yet, show a loading banner
+        r#"
+(function() {
+    const banner = document.createElement('div');
+    banner.id = 'freedom-kit-onion-banner';
+    banner.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    `;
+    
+    banner.innerHTML = `
+        <div style="font-size: 20px;">🧅</div>
+        <div>
+            <div style="font-weight: 600; font-size: 13px;">
+                TOR Hidden Service
+            </div>
+            <div style="font-size: 11px; opacity: 0.9;">
+                ⏳ Bootstrapping...
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(banner);
+    document.body.style.paddingTop = banner.offsetHeight + 'px';
+})();
+"#
+        .to_string()
+    };
+
+    // Inject the JavaScript
+    if let Some(window) = app_handle.get_webview_window("main") {
+        match window.eval(&banner_js) {
+            Ok(_) => println!("✅ Onion banner injected successfully"),
+            Err(e) => eprintln!("❌ Failed to inject banner: {}", e),
+        }
+    }
+}
+
 /// Check if Ghost is ready by polling the endpoint
 async fn wait_for_ghost_ready(url: &str, max_attempts: u32) -> anyhow::Result<()> {
     println!("⏳ Waiting for Ghost to be ready at {}...", url);
@@ -185,6 +380,15 @@ pub fn run() {
                             {
                                 Ok(_) => {
                                     println!("✅ Window navigated to Ghost");
+
+                                    // Clone app_handle for the async task
+                                    let app_for_banner = app_handle.clone();
+
+                                    // Wait a moment for the page to load, then inject the banner
+                                    tauri::async_runtime::spawn(async move {
+                                        tokio::time::sleep(Duration::from_secs(2)).await;
+                                        inject_onion_banner(&app_for_banner).await;
+                                    });
                                 }
                                 Err(e) => eprintln!("❌ Failed to navigate window: {}", e),
                             }
@@ -295,6 +499,19 @@ pub fn run() {
                         match app_handle.emit("tor-ready", onion_address.clone()) {
                             Ok(_) => println!("✅ tor-ready event emitted successfully"),
                             Err(e) => eprintln!("❌ Failed to emit tor-ready event: {}", e),
+                        }
+
+                        // If we're already on the Ghost page, inject/update the banner
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            if let Ok(url) = window.url() {
+                                let url_str = url.to_string();
+                                if url_str.contains("localhost:2368")
+                                    || url_str.contains("127.0.0.1:2368")
+                                {
+                                    println!("🔄 Updating banner with TOR address...");
+                                    inject_onion_banner(&app_handle).await;
+                                }
+                            }
                         }
                     }
                     Err(e) => {
