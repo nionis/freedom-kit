@@ -7,7 +7,7 @@
   "database": {
     "client": "sqlite3",
     "connection": {
-      "filename": "/Users/nioni/Documents/work/ylesydt/realfi/hidden-payment-channels/examples/freedom-kit/ghost-sidecar/local/content/data/ghost-local.db"
+      "filename": "/snapshot/local/content/data/ghost-local.db"
     }
   },
   "mail": {
@@ -24,6 +24,6 @@
     "staffDeviceVerification": false
   },
   "paths": {
-    "contentPath": "/Users/nioni/Documents/work/ylesydt/realfi/hidden-payment-channels/examples/freedom-kit/ghost-sidecar/local/content"
+    "contentPath": "/snapshot/local/content"
   }
 }

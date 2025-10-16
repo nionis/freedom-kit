@@ -4,11 +4,11 @@ import fs from "node:fs";
 import { homedir } from "node:os";
 
 // Determine if we're running from a pkg bundle
-const isPkg = typeof process["pkg"] !== "undefined";
+const isPkg = typeof (process as any).pkg !== "undefined";
 console.log("Running in pkg mode:", isPkg);
 
 // Function to recursively copy directory
-function copyDirSync(src, dest) {
+function copyDirSync(src: string, dest: string) {
   // Create destination directory if it doesn't exist
   fs.mkdirSync(dest, { recursive: true });
 
@@ -39,12 +39,37 @@ function getGhostPath() {
       console.log("First run detected. Extracting Ghost data...");
 
       // The bundled assets are in the snapshot filesystem
-      const bundledPath = join(__dirname, "local");
+      const bundledPath = join(__dirname, "..", "local");
 
       try {
         console.log(`Copying from ${bundledPath} to ${ghostPath}...`);
         copyDirSync(bundledPath, ghostPath);
         console.log("Ghost data extracted successfully!");
+
+        // Update paths in config.development.json
+        const configPath = join(ghostPath, "config.development.json");
+        if (fs.existsSync(configPath)) {
+          console.log("Updating config paths...");
+          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+          // Update database path
+          if (config.database?.connection?.filename) {
+            config.database.connection.filename = join(
+              ghostPath,
+              "content",
+              "data",
+              "ghost-local.db"
+            );
+          }
+
+          // Update content path
+          if (config.paths?.contentPath) {
+            config.paths.contentPath = join(ghostPath, "content");
+          }
+
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+          console.log("Config paths updated successfully!");
+        }
       } catch (error) {
         console.error("Failed to extract Ghost data:", error);
         process.exit(1);
@@ -54,14 +79,13 @@ function getGhostPath() {
     return ghostPath;
   } else {
     // When running in development, use the local folder directly
-    return join(__dirname, "local");
+    return join(__dirname, "..", "local");
   }
 }
 
 const ghostPath = getGhostPath();
 
 console.log("Starting Ghost from:", ghostPath);
-console.log("Running in pkg mode:", isPkg);
 
 // Start Ghost using ghost-cli
 const ghostProcess = spawn("node", [join(ghostPath, "current", "index.js")], {

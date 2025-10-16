@@ -19,8 +19,10 @@ start(appDataDir);
 process.on("SIGINT", () => {
   console.log("Received SIGINT, shutting down Railgun...");
   stop();
+  setTimeout(() => process.exit(0), 1e3);
 });
 process.on("SIGTERM", () => {
   console.log("Received SIGTERM, shutting down Railgun...");
   stop();
+  setTimeout(() => process.exit(0), 1e3);
 });

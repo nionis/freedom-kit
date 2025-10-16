@@ -1,9 +1,10 @@
 {
   "name": "ghost-sidecar",
   "version": "0.0.1",
-  "bin": "index.js",
+  "bin": "dist/index.js",
   "license": "MIT",
   "scripts": {
+    "prebuild": "tsc",
     "build": "pkg . --targets node22-macos-arm64 --output ../src-tauri/binaries/ghost-sidecar-aarch64-apple-darwin",
     "build:all": "pkg . --targets node22-macos-arm64,node22-linux-x64,node22-win-x64"
   },
@@ -14,7 +15,10 @@
     "outputPath": "../src-tauri/binaries"
   },
   "devDependencies": {
-    "@yao-pkg/pkg": "^6.9.0"
+    "@yao-pkg/pkg": "^6.9.0",
+    "@types/node": "^22.8.5",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.0"
   },
   "dependencies": {
     "ghost-cli": "^1.28.3"

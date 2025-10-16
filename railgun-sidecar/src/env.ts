@@ -4,7 +4,7 @@ import {
 } from "@railgun-community/shared-models";
 
 /** our EVM network */
-export const NETWORK = "Ethereum Sepolia" as NetworkName;
+export const NETWORK = "Ethereum_Sepolia" as NetworkName;
 if (!NETWORK) {
   throw new Error("NETWORK is not set");
 }
