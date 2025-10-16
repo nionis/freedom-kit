@@ -1,0 +1,29 @@
+{
+  "url": "http://localhost:2368/",
+  "server": {
+    "port": 2368,
+    "host": "127.0.0.1"
+  },
+  "database": {
+    "client": "sqlite3",
+    "connection": {
+      "filename": "/Users/nioni/Documents/work/ylesydt/realfi/hidden-payment-channels/examples/freedom-kit/ghost-sidecar/local/content/data/ghost-local.db"
+    }
+  },
+  "mail": {
+    "transport": "Direct"
+  },
+  "logging": {
+    "transports": [
+      "file",
+      "stdout"
+    ]
+  },
+  "process": "local",
+  "security": {
+    "staffDeviceVerification": false
+  },
+  "paths": {
+    "contentPath": "/Users/nioni/Documents/work/ylesydt/realfi/hidden-payment-channels/examples/freedom-kit/ghost-sidecar/local/content"
+  }
+}

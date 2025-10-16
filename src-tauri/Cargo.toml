@@ -1,0 +1,49 @@
+[package]
+name = "freedom-kit"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "freedom_kit_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-shell = "2"
+
+# TOR dependencies
+arti-client = { version = "0.23.0", features = [
+  "tokio",
+  "onion-service-service",
+  "onion-service-client",
+] }
+tor-rtcompat = { version = "0.23.0", features = ["tokio"] }
+tor-hsservice = { version = "0.23.0" }
+tor-hsrproxy = { version = "0.23.0" }
+tor-config = { version = "0.23.0" }
+tokio = { version = "1.47.1", features = ["full"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "5"
+
+# HTTP proxy dependencies
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+tower = "0.4"
+reqwest = { version = "0.12", features = ["json", "gzip", "brotli", "deflate"] }
+urlencoding = "2"
