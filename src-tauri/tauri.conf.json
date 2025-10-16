@@ -33,8 +33,7 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      "binaries/ghost-sidecar",
-      "binaries/railgun-sidecar"
+      "binaries/ghost-sidecar"
     ]
   }
 }
