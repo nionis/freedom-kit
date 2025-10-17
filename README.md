@@ -6,6 +6,8 @@ Freedom-kit gives you one-click access to your own anonymous blog, hidden publis
 
 It integrates [TOR hidden services](https://tb-manual.torproject.org/onion-services/), [Ghost](https://github.com/TryGhost/Ghost), and [railgun](https://github.com/Railgun-Community/wallet) in a single application.
 
+![Preview of Freedom-kit](preview.png)
+
 [quick walkthrough demo](https://youtu.be/GD5L1Oiqlz4)
 
 ## Gist
