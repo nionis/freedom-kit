@@ -144,6 +144,7 @@ freedom-kit/
 
 - railgun does not work in all platforms
 - no formal security / traffic analysis has been done
+- firewall not active on the frontend, only backend
 
 ## Roadmap
 
@@ -151,6 +152,7 @@ See the [todo list](#todo) at the top of this README for current development pri
 
 ### Planned Features
 
+- [ ] proxy calls from the frontend to TOR
 - [ ] add railgun multiplatform form support
 - [ ] load application through encrypted volume (veracrypt plausibility)
 - [ ] discovery of blogs / content through private mediums
