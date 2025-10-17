@@ -8,6 +8,12 @@ It integrates [TOR hidden services](https://tb-manual.torproject.org/onion-servi
 
 [quick walkthrough demo](https://youtu.be/GD5L1Oiqlz4)
 
+## Gist
+
+- **Problem:** We can't expect everyday people to know what breaks, or leaks their privacy. If someone wants to share information privately, right now it requires a complicated set of tools to make it so, IF they can set it up correctly.
+- **Solution:** A binary that encapsulates everything you need to remain private, with guardrails to ensure you don't screw up.
+- **Impact:** Makes the web a safer place for everyone who wants to share their thoughts, and problems to the world.
+
 ## Features
 
 - **Anonymous Blog**: Run your own Ghost blog accessible via TOR hidden service (.onion address)
