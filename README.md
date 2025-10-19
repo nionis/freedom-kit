@@ -72,6 +72,28 @@ graph TB
    - Windows: `freedom-kit-windows.exe`
 3. Run the application
 
+## Building & running it from scratch
+
+```bash
+# in ghost
+cd ghost-sidecar/original/current
+yarn
+
+# in ghost-sidecar
+cd ghost-sidecar
+yarn
+yarn build:all
+
+# in railgun-sidecar
+cd railgun-sidecar
+yarn
+yarn build:all
+
+# in project root
+yarn
+yarn tauri dev
+```
+
 ### Receiving Tips
 
 Your readers can send you tips by:
@@ -82,7 +104,7 @@ Your readers can send you tips by:
 
 Tips will appear in the Freedom Kit wallet balance automatically.
 
-⚠ This at the moment works only on Linux.
+⚠ This right now is disabled as it is blocker for building the binary, [90% of the implementation is done](./railgun-sidecar/). The current address is a mock address.
 
 ## Architecture
 
