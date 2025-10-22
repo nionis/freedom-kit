@@ -1,7 +1,6 @@
 import { join } from "node:path";
 import fs from "node:fs";
 import {
-  BIN_ROOT,
   HOM_ROOT,
   LOC_GHOST_FOLDER,
   BIN_GHOST_FOLDER,
@@ -17,7 +16,7 @@ console.log("Running in pkg mode:", isPkg);
 
 // Get the appropriate Ghost data path
 async function getGhostPath() {
-  // running in development
+  // running in development, using the folder in this dir
   if (!isPkg) {
     return LOC_GHOST_FOLDER;
   }
