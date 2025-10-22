@@ -1,8 +1,5 @@
 # freedom-kit
 
-[![CI](https://github.com/YOUR_USERNAME/freedom-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/freedom-kit/actions/workflows/ci.yml)
-[![Build Binaries](https://github.com/YOUR_USERNAME/freedom-kit/actions/workflows/build-binaries.yml/badge.svg)](https://github.com/YOUR_USERNAME/freedom-kit/actions/workflows/build-binaries.yml)
-
 A single, multi-platform, _fool-proof_ application for activists, publishers, to use.
 
 Freedom-kit gives you one-click access to your own anonymous blog, hidden publishing, and a private wallet.
@@ -96,30 +93,6 @@ make build
 ```bash
 make dev
 ```
-
-### GitHub Actions
-
-The project includes automated build workflows:
-
-- **`build-binaries.yml`**: Builds production binaries for all platforms (macOS ARM64, macOS x86_64, Linux, Windows)
-
-  - Triggers on pushes to `main` or `build-binaries` branches
-  - Creates GitHub releases when you push version tags (e.g., `v1.0.0`)
-  - Uploads artifacts for all platforms
-
-- **`build-dev.yml`**: Fast development builds with caching
-  - Triggers on all other branches and PRs
-  - Uses caching to speed up builds
-  - Tests that the project builds on all platforms
-
-To create a release:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The workflow will automatically build binaries for all platforms and create a draft release.
 
 ### Receiving Tips
 
